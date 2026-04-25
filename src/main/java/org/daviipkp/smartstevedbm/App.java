@@ -1,58 +1,47 @@
 package org.daviipkp.smartstevedbm;
 
-import java.net.Authenticator;
-import java.net.PasswordAuthentication;
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
-import java.util.Base64;
+import org.lightcouch.CouchDbClient;
+
+import io.javalin.Javalin;
 
 public class App {
 
-    private static HttpClient client;
+    private static Javalin server;
+
+    private static CouchDbClient sofa;
+
+    private static String databaseType = "couchdb";
+
+    private static final int PORT = 8005;
+
     public static void main(String[] args ) {
-        
-        client = HttpClient.newBuilder().authenticator(new Authenticator() {
-           @Override
-           protected PasswordAuthentication getPasswordAuthentication() {
-               
-               return new PasswordAuthentication("daviipkp", "x".toCharArray());
-           } 
-        }).connectTimeout(Duration.ofSeconds(10)).build();
-        
-        printRequest(client, "https://obsidian.daviipkp.org/_all_dbs", "daviipkp:x");
-    }
-
-    private static void printRequest(HttpClient client, String URL) {
-        HttpRequest req = HttpRequest.newBuilder().uri(URI.create(URL)).header("Accept", "application/json").build();
-        HttpResponse<String> resp;
+        System.out.println("Starting...");
+        setupServer();
         try {
-            resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-            System.out.println("Response : " + resp.body());
-        } catch (Exception e) {
+            checkDatabase();
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        
     }
 
-    private static void printRequest(HttpClient client, String URL, String auth) {
-        HttpRequest req = HttpRequest
-        .newBuilder()
-        .uri(URI.create(URL))
-        .header("Accept", "application/json")
-        .header("Authorization", "Basic " + Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8)))
-        .build();
-        HttpResponse<String> resp;
-        System.out.println(req.headers());
-        try {
-            resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-            System.out.println("Response : " + resp.body());
-        } catch (Exception e) {
-            e.printStackTrace();
+    public static void checkDatabase() throws InterruptedException {
+        if(databaseType == "couchdb") {
+            System.out.println("Database type is couchdb but no credentials were set. Set it up!");
+            Thread.sleep(5000);
+            checkDatabase();
         }
+    }
+
+    public static void setupServer() {
+        server = Javalin.create(config -> {
+            config.routes.post("/databasetype", ctx -> {
+                System.out.println(ctx.body());
+            });
+            
+        }).start(PORT);
+
+
+        System.out.println("Server is running on port " + PORT);
         
     }
 
