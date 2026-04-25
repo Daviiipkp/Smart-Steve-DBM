@@ -10,7 +10,7 @@ public class App {
 
     private static CouchDbClient sofa;
 
-    private static String databaseType = "couchdb";
+    private static String databaseType = "";
 
     private static final int PORT = 8005;
 
@@ -25,17 +25,36 @@ public class App {
     }
 
     public static void checkDatabase() throws InterruptedException {
-        if(databaseType == "couchdb") {
-            System.out.println("Database type is couchdb but no credentials were set. Set it up!");
+        if(databaseType.isEmpty()) {
+            System.out.println("Database type is not set. Set it up!");
             Thread.sleep(5000);
             checkDatabase();
         }
+        else{
+            if(!anyWorkingClient()) {
+                System.out.println("Database type is set to " + databaseType + " but no credentials were set. Set it up!");
+                Thread.sleep(5000);
+                checkDatabase();
+            }else{
+                System.out.println("All set! Starting check thread.");
+            }
+        }
+    }
+
+    private static boolean anyWorkingClient() {
+        if(sofa != null) {
+            return true;
+        }
+        return false;
     }
 
     public static void setupServer() {
         server = Javalin.create(config -> {
             config.routes.post("/databasetype", ctx -> {
-                System.out.println(ctx.body());
+                if(ctx.body().equals("couchdb")) {
+                    databaseType = ctx.body();
+                    ctx.status(201).result("Done!");
+                }
             });
             
         }).start(PORT);
