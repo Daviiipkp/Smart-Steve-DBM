@@ -1,40 +1,47 @@
 package org.daviipkp.smartstevedbm;
 
-import org.lightcouch.CouchDbClient;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.daviipkp.smartstevedbm.structure.implementation.CouchDBDatabase;
+import org.sqlite.SQLiteDataSource;
 
 import io.javalin.Javalin;
+import io.requery.Persistable;
+import io.requery.meta.EntityModel;
+import io.requery.meta.EntityModelBuilder;
+import io.requery.sql.Configuration;
+import io.requery.sql.ConfigurationBuilder;
+import io.requery.sql.EntityDataStore;
+import io.requery.sql.SchemaModifier;
+import io.requery.sql.TableCreationMode;
 
 public class App {
 
     private static Javalin server;
 
-    private static CouchDbClient sofa;
-
-    private static String databaseType = "";
-
+    private static List<CouchDBDatabase> couchDb_databases = new ArrayList<>();
     private static final int PORT = 8005;
 
     public static void main(String[] args ) {
         System.out.println("Starting...");
         setupServer();
         try {
-            checkDatabase();
+            checkDatabases();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public static void checkDatabase() throws InterruptedException {
-        if(databaseType.isEmpty()) {
-            System.out.println("Database type is not set. Set it up!");
+    public static void checkDatabases() throws InterruptedException {
+        if(couchDb_databases.isEmpty()) {
+            System.out.println("There is no Database set. Set it up!");
             Thread.sleep(5000);
-            checkDatabase();
+            checkDatabases();
         }
         else{
             if(!anyWorkingClient()) {
-                System.out.println("Database type is set to " + databaseType + " but no credentials were set. Set it up!");
-                Thread.sleep(5000);
-                checkDatabase();
+               
             }else{
                 System.out.println("All set! Starting check thread.");
             }
@@ -42,7 +49,7 @@ public class App {
     }
 
     private static boolean anyWorkingClient() {
-        if(sofa != null) {
+        if(!couchDb_databases.isEmpty()) {
             return true;
         }
         return false;
@@ -50,18 +57,38 @@ public class App {
 
     public static void setupServer() {
         server = Javalin.create(config -> {
-            config.routes.post("/databasetype", ctx -> {
-                if(ctx.body().equals("couchdb")) {
-                    databaseType = ctx.body();
-                    ctx.status(201).result("Done!");
+            config.routes.post("/create", ctx -> {
+                if(!validName(ctx.body())) {
+                    ctx.result("INVALID NAME");
                 }
+                couchDb_databases.add(new CouchDBDatabase(ctx.body()));
+                ctx.result("DATABASE CREATED!");
             });
+
             
         }).start(PORT);
 
 
         System.out.println("Server is running on port " + PORT);
         
+    }
+
+    private static boolean validName(String arg0) {
+        return true;
+    }
+
+
+    private static void setupLocalDB() {
+        SQLiteDataSource dataSource = new SQLiteDataSource();
+        dataSource.setUrl("jdbc:sqlite:banco_teste.db"); 
+
+        Configuration configuration = new ConfigurationBuilder(dataSource)
+                .useDefaultLogging()
+                .build();
+        SchemaModifier tables = new SchemaModifier(dataSource);
+        tables.createTables(TableCreationMode.CREATE_NOT_EXISTS);
+
+        EntityDataStore<Persistable> dataStore = new EntityDataStore<>(configuration);
     }
 
 }
