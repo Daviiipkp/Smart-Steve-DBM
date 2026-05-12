@@ -1,0 +1,3 @@
+- connect to couchdb
+- save infos with sqlite
+- make LLM requests with OpenAI structure

@@ -1,5 +1,8 @@
 package org.daviipkp.smartstevedbm.structure.abstraction;
 
+import io.requery.Entity;
+
+@Entity
 public class AbstractDatabase {
 
     private String name;
@@ -9,8 +12,12 @@ public class AbstractDatabase {
     private String username;
     private String password;
 
-    public AbstractDatabase(String arg0) {
+    public AbstractDatabase(String arg0, String arg1, int arg2, String arg3, String arg4) {
         name = arg0;
+        host = arg1;
+        port = arg2;
+        username = arg3;
+        password = arg4;
     }
 
     public int checkIssue() {

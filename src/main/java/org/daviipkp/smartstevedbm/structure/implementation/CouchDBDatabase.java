@@ -8,9 +8,11 @@ public class CouchDBDatabase extends AbstractDatabase {
 
     private static CouchDbClient client;
 
-    public CouchDBDatabase(String arg0) {
-        super(arg0);
+    public CouchDBDatabase(String arg0, String arg1, int arg2, String arg3, String arg4) {
+        super(arg0, arg1, arg2, arg3, arg4);
     }
+
+    
 
     public void setupClient() {
         if(this.checkIssue() != -1) {
